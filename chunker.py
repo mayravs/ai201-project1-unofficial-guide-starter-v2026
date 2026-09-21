@@ -80,6 +80,9 @@ def fallback_split(
     return chunks
 
 
+TITLE_LENGTH = 60   # a paragraph shorter than this is a heading, not content
+
+
 def split_documents(documents: list[Document]) -> list[Chunk]:
     """
     Split documents into chunks. ⚠️ REPLACE THE BODY OF THIS IN MILESTONE 3.
@@ -96,8 +99,56 @@ def split_documents(documents: list[Document]) -> list[Chunk]:
       - Is the useful information in one sentence, or spread over a paragraph?
       - Would splitting on paragraph breaks keep more thoughts intact than
         splitting on a character count?
+
+    campus_life is mostly short, single-topic posts — a title line followed by
+    one or a few short paragraphs. Splitting on blank-line paragraph breaks
+    keeps a single-paragraph post as one chunk (same as the fallback) but
+    gives a multi-paragraph post (a course review's Format/Workload/Advice,
+    say) one chunk per sub-topic instead of one chunk for the whole post.
+
+    A paragraph shorter than TITLE_LENGTH is a heading, not content on its
+    own, so it gets folded into the paragraph that follows it rather than
+    becoming a chunk with nothing in it.
     """
-    return fallback_split(documents)
+    chunks: list[Chunk] = []
+    for doc in documents:
+        paragraphs = [p.strip() for p in doc.text.split("\n\n") if p.strip()]
+
+        merged: list[str] = []
+        for paragraph in paragraphs:
+            if merged and len(merged[-1]) < TITLE_LENGTH:
+                merged[-1] = f"{merged[-1]}\n\n{paragraph}"
+            else:
+                merged.append(paragraph)
+
+        index = 0
+        for paragraph in merged:
+            if len(paragraph) <= config.CHUNK_SIZE:
+                chunks.append(
+                    Chunk(
+                        text=paragraph,
+                        source=doc.source,
+                        index=index,
+                        produced_by="chunker.py::split_documents",
+                    )
+                )
+                index += 1
+            else:
+                # Longer than expected for this corpus — fall back to a
+                # character window rather than keeping one oversized chunk.
+                oversized = Document(source=doc.source, text=paragraph)
+                for sub_chunk in fallback_split([oversized]):
+                    chunks.append(
+                        Chunk(
+                            text=sub_chunk.text,
+                            source=doc.source,
+                            index=index,
+                            produced_by="chunker.py::split_documents",
+                        )
+                    )
+                    index += 1
+
+    return chunks
 
 
 def describe(chunks: list[Chunk]) -> str:
