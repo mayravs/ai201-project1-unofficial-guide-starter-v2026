@@ -73,30 +73,36 @@ Laundry costs $1.50 wash, $1.25 dry, coin or card. On noise: loud until about 1a
 
 ## Sample Answer
 
-<!-- One complete question and answer, pasted as text, with the source line
-     visible. Milestone 4. -->
-
 **Question:**
+
+How is financial aid handled for study abroad programs?
 
 **Answer:**
 
 ```
+The financial aid package travels with you when you study abroad. 
+
+Source: admin_study_abroad.txt
+
+Sources retrieved: admin_add_drop_deadline.txt, admin_campus_jobs_and_financial_aid.txt, admin_graduation_requirements.txt, admin_study_abroad.txt, admin_transcript_requests.txt
 ```
 
-**My relevance cutoff:**
-
-<!-- The number you set in config.py, and how you got there.
-
-     You ran five questions your corpus covers and the five in OUT_OF_SCOPE
-     that it clearly doesn't, and wrote down the best distance for each. What
-     did those two groups look like? Where was the gap? Put the actual numbers
-     here — the table below wants all ten rows.
-
-     Milestone 4. -->
+**My relevance cutoff:** 0.65
+ 
+ My worst in-corpus distance (0.513, laundry) and best out-of-scope distance (0.825, Mongolia) leave a 0.31 gap with nothing in it, so I set the cutoff in the middle rather than hugging either group.
 
 | Question | In corpus? | Best distance |
 |---|---|---|
-|  |  |  |
+| What kind of discounts are available for textbooks? | yes | 0.299 |
+| How is financial aid handled for study abroad programs? | yes | 0.346 |
+| What do students say about laundry wait times? | yes | 0.513 |
+| What do students say is the difference between a work-study job and a non-work-study job? | yes | 0.442 |
+| What is one graduation requirement that catches students off-guard? | yes | 0.484 |
+| What is the capital of Mongolia? | no | 0.825 |
+| How do I change the oil in a diesel engine? | no | 0.934 |
+| Who won the 1994 World Cup? | no | 0.886 |
+| What is the recommended dosage of ibuprofen for a headache? | no | 0.844 |
+| How do I write a for loop in Rust? | no | 0.896 |
 
 ## How I Used AI
 
