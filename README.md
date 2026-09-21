@@ -22,11 +22,7 @@ Corpora picked: campus_life
 
 ## What This Does
 
-<!-- Three or four sentences. Which corpus you picked, and the kinds of
-     questions your system answers. Write it for someone who has never seen
-     this repo.
-
-     Milestone 5. -->
+This is a retrieval-augmented Q&A system over `campus_life`, a corpus of about 90 short posts covering housing, dining, courses, admin deadlines, money, and transit at one college. It answers specific questions a student might actually have — "what's the add/drop deadline," "how many hours a week does BIOL 160 take," "does financial aid travel with you on study abroad" — by retrieving the post that covers the topic and citing it by name in the answer. If a question isn't something campus_life covers, a relevance gate refuses it instead of guessing.
 
 ## Chunking Strategy
 
@@ -106,18 +102,9 @@ Sources retrieved: admin_add_drop_deadline.txt, admin_campus_jobs_and_financial_
 
 ## How I Used AI
 
-<!-- Two specific moments. For each: what you asked for, what came back, and
-     what you changed about it.
+**1.** I'd selected the character-window loop in `fallback_split` and asked Claude to change it to split by paragraph instead. It pointed out that was the wrong function — the file's own comments say to keep `fallback_split` as the baseline to compare against — and that I'd already accidentally pasted that loop into `split_documents`, leaving `chunk_size` and `overlap` undefined. It rewrote `split_documents` to split on blank-line paragraphs there instead, and added a rule I hadn't asked for: folding any paragraph under 60 characters into the one after it, since a bare title line would otherwise become its own chunk with no content.
 
-     "I asked Claude to write the chunking function from my notes. It ignored
-     the overlap, so I added that myself" is the level of detail we're after.
-     "I used AI to help me code" is not.
-
-     Milestone 5. -->
-
-**1.**
-
-**2.**
+**2.** I gave Claude my measured best-distance table from Milestone 4 — five in-corpus questions, five `OUT_OF_SCOPE` ones — and asked where to set the cutoff. It recommended 0.65, roughly the midpoint between my worst in-corpus distance (0.513) and my best out-of-scope distance (0.825), and when I asked what I'd get wrong at that number, it said the table only covers ten questions, so the real risk is a future question that overlaps more than these do — not anything visible in this data. I used 0.65 in `config.py` since the gap was wide enough that the exact number inside it mattered less than picking one.
 
 <!-- ── Stretch features ─────────────────────────────────────────────────────
      Doing one? Say so here BEFORE you start. A feature this README never
