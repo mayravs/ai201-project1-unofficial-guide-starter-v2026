@@ -232,17 +232,14 @@ Yes: on the laundry question, retrieval used to pull in three unrelated dining c
 
 ## What's Still Broken
 
-<!-- For each criterion still missed after your fix: what you'd do about it,
-     and why you stopped where you did.
-
-     "I ran out of time" is fine if it's true. Pretending nothing is left is
-     not.
-
-     Milestone 5. -->
+Nothing missed its target, but the test doesn't really prove hybrid search does what I built it for — none of my five questions lean on exact terms like course codes or dollar amounts, so the only real evidence I have is the laundry case, which helped for a different reason (more matching dorms, not an exact-term match). I also haven't tested what happens when a keyword match is strong but the chunk isn't actually relevant — BM25 has no distance floor of its own, so a bad match could ride into the citations alongside the good ones. I ran out of time to write those test questions.
 
 ## What I'd Do Differently
 
-<!-- Knowing what you know now — which of your five criteria would you write
-     differently, and why?
+I'd change criterion 1's target from "4 of 5" to "5 of 5." Retrieval is deterministic, so with the same five questions every run, there's no honest way for it to land anywhere else — the slack was never real. I'd also swap the "3 runs of the same 5 questions" setup for one run over a bigger, more varied set of questions, since once I knew chunking and retrieval don't change between runs, repeating them stopped teaching me anything new.
 
-     Milestone 5. -->
+## How I Used AI in Unit 2
+
+**1.** All five criteria came back MET in every run, so I asked Claude what to put in Diagnoses when nothing actually missed. It pointed out that three of the five criteria (1, 4, 5) sit downstream of deterministic chunking and retrieval on a fixed set of questions, so rerunning them three times only proved the code was reproducible, not that a real 4-of-5 target had been tested — the slack in that target could never actually get used. I wrote that reasoning into Diagnoses instead of just saying "nothing failed."
+
+**2.** For The Improvement, I gave Claude the two suggested options — hybrid search or a second chunking strategy — and asked which one fit my diagnosis. It noticed my diagnosis's actual gap was untested exact-term questions, and that my corpus is full of course codes and dollar amounts semantic search tends to blur together, so it recommended hybrid search over touching the chunker. It then implemented BM25 alongside the existing vector search in `store.py::search`, combining both rankings with reciprocal rank fusion, and kept `Result.distance` as the plain cosine distance throughout so the gate's 0.65 cutoff stayed calibrated to what it always meant instead of quietly breaking.
