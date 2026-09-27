@@ -106,42 +106,91 @@ Sources retrieved: admin_add_drop_deadline.txt, admin_campus_jobs_and_financial_
 
 **2.** I gave Claude my measured best-distance table from Milestone 4 — five in-corpus questions, five `OUT_OF_SCOPE` ones — and asked where to set the cutoff. It recommended 0.65, roughly the midpoint between my worst in-corpus distance (0.513) and my best out-of-scope distance (0.825), and when I asked what I'd get wrong at that number, it said the table only covers ten questions, so the real risk is a future question that overlaps more than these do — not anything visible in this data. I used 0.65 in `config.py` since the gap was wide enough that the exact number inside it mattered less than picking one.
 
-<!-- ── Stretch features ─────────────────────────────────────────────────────
-     Doing one? Say so here BEFORE you start. A feature this README never
-     claims earns nothing.
-     ───────────────────────────────────────────────────────────────────────── -->
-
 ---
 
 # Unit 2
 
-<!-- These sections get ADDED to what's already above. Don't delete or rewrite
-     unit 1 — the point is that someone can see what you said before you knew
-     how it went. -->
-
 ## Run Log — Before
-
-<!-- Your five criteria, three runs each. `python run_eval.py --label before`
-     runs the questions, puts the OUT_OF_SCOPE ones through the gate, and
-     writes it all into results/ for you. Targets come from criteria.md; the
-     verdict column is your call.
-
-     Criterion 3 is measured in one deterministic pass rather than three, so
-     the same number goes in all three run columns. That's correct, not lazy.
-
-     Milestone 1. -->
 
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
-| 1. Retrieved chunk contains the answer | 4 of 5 |  |  |  |  |
-| 2. Every answer names a source | 5 of 5 |  |  |  |  |
-| 3. Gate stops out-of-corpus questions | 4 of 5 |  |  |  |  |
-| 4. | | | | | |
-| 5. | | | | | |
+| 1. Retrieved chunk contains the answer | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 2. Every answer names a source | 5 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 3. Gate stops out-of-corpus questions | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 4. Chunks have the right size | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 5. Every answer names the correct source | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
 
-<!-- Underneath, paste the REAL output for each criterion from one of your
-     runs — the actual text your system produced, not a description of it.
-     Name the file and function that produced it. -->
+**Criterion 1 — retrieved chunk contains the answer** (produced by `store.py::search`, chunks from `chunker.py::split_documents`)
+
+Question: How is financial aid handled for study abroad programs?
+
+- Sources retrieved: admin_add_drop_deadline.txt, admin_campus_jobs_and_financial_aid.txt, admin_graduation_requirements.txt, admin_study_abroad.txt, admin_transcript_requests.txt
+
+```
+Your financial aid package travels with you when you study abroad. 
+
+Source: admin_study_abroad.txt
+```
+> The chunk from admin_study_abroad.txt containing "the financial aid package travels with you when you study abroad" was in the top 5.
+
+**Criterion 2 — every answer names a source** (produced by `generate.py::answer_from_chunks`)
+
+Question: What do students say is the difference between a work-study job and a non-work-study job?
+
+```
+The difference is that work-study earnings do not count against your financial aid the way ordinary income does, whereas non-work-study campus jobs do count against your financial aid. 
+
+Source: `admin_campus_jobs_and_financial_aid.txt`
+```
+
+Question: What is one graduation requirement that catches students off-guard? 
+
+```
+The writing-intensive requirement (taking two courses in different departments) is the one that catches people off-guard (admin_graduation_requirements.txt).
+```
+
+> Whether explicitly labeled as "source" or inline, every answer names a source.
+
+**Criterion 3 — gate stops out-of-corpus questions** (produced by `run_eval.py::check_out_of_scope` calling `gate.py::check`, cutoff 0.65)
+
+'''
+Out-of-scope questions (the gate should refuse these):
+  refused  (best distance 0.825)  What is the capital of Mongolia?
+  refused  (best distance 0.934)  How do I change the oil in a diesel engine?
+  refused  (best distance 0.886)  Who won the 1994 World Cup?
+  refused  (best distance 0.844)  What is the recommended dosage of ibuprofen for a headache?
+  refused  (best distance 0.896)  How do I write a for loop in Rust?
+  -> gate refused 5 of 5
+'''
+
+**Criterion 4 — chunks have the right size** (produced by `chunker.py::split_documents`)
+
+Question: What kind of discounts are available for textbooks?
+Source: money_textbooks.txt
+
+```
+Textbooks without paying full price
+
+The library holds one copy of most required texts on two-hour reserve. For courses where the text is used constantly that isn't enough, but for the reading-light courses it's genuinely all you need.
+
+The campus store price-matches, which is not advertised anywhere and you have to ask at the counter with the other listing on your phone.
+```
+
+> Chunks containing the answer begin and end on a sentence boundary and aren't cut off mid-word or mid-sentence.
+
+**Criterion 5 — every answer names the correct source** (produced by `generate.py::answer_from_chunks`)
+
+Question: What do students say about laundry wait times? 
+
+- Sources retrieved: dining_halden_hall_followup.txt, dining_kestrel_commons_followup.txt, dining_north_kitchen_followup.txt, housing_old_brewhouse_laundry.txt, housing_tamsin_court_laundry.txt
+
+```
+Students state that the dryers back up on Sunday evenings and that you will wait on Sunday after 6pm. 
+
+Sources: `housing_tamsin_court_laundry.txt` and `housing_old_brewhouse_laundry.txt`
+```
+
+> Even when two sources are correct, they are both named. 
 
 ## Verdicts
 

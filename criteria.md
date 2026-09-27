@@ -50,13 +50,21 @@ These questions are about topics that don't overlap with campus_life at all, so 
 
 ---
 
-## 4. Chunks have the rigtht size
+## 4. Chunks have the right size
 
 When a post has more than one paragraph, splitting it must not cut a sentence in half. In at least 9 out of 10 chunks with multi-paragraph posts, they should begin and end on a sentence boundary rather than mid-word or mid-sentence.
 
 **Why this target:**
 
 Some documents pack distinct sub-topics into separate paragraphs, so a paragraph-based split risks a paragraph break that doesn't line up with a sentence break. 9 out of 10 leaves room for one document I haven't read closely enough yet.
+
+**Revised in unit 2:** 
+
+For at least 4 of my 5 test questions, the chunk containing the answer begins and ends on a sentence boundary rather than mid-word or mid-sentence.
+
+**Why revised:** 
+
+"9 out of 10 chunks" had no fixed denominator, which chunks counted depended on which documents I happened to inspect, so I couldn't get the same count twice. Checking the same 5 test questions I already use for retrieval gives a fixed, reproducible set.
 
 ---
 
