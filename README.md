@@ -194,22 +194,13 @@ Sources: `housing_tamsin_court_laundry.txt` and `housing_old_brewhouse_laundry.t
 
 ## Verdicts
 
-<!-- MET or MISSED for each of the five, against the target you wrote last
-     unit — not a new one. Plus a sentence on how you decided. That sentence
-     matters most where it was close.
-
-     If your target said 4 of 5 and your runs came out 4, 3, 4, that's a MISS.
-     The target has to hold, not show up occasionally.
-
-     Milestone 2. -->
-
 | # | Criterion | Verdict | How I decided |
 |---|---|---|---|
-| 1 |  |  |  |
-| 2 |  |  |  |
-| 3 |  |  |  |
-| 4 |  |  |  |
-| 5 |  |  |  |
+| 1 | Retrieved chunk contains the answer | MET | Target was 4 of 5; all three runs came back 5/5, retrieval is deterministic, so the same questions return the same chunks every run. |
+| 2 | Every answer names a source | MET | Target was 5 of 5; the strictest bar possible and every run landed exactly on it, so this is the closest call of the five. |
+| 3 | Gate stops out-of-corpus questions | MET | Target was 4 of 5; the gate refused all 5 out-of-scope questions in every run, and even the nearest miss (Mongolia at distance 0.825) sat 0.175 past the 0.65 cutoff, so there was real distance, not just a lucky count. |
+| 4 | Chunks have the right size | MET | Target (revised) was 4 of 5; all three runs scored 5/5, and since paragraph splitting is deterministic for the same documents, I didn't expect this to vary run to run the way retrieval or generation might. |
+| 5 | Every answer names the correct source | MET | Target was 4 of 5; all three runs hit 5/5, including the laundry pair where the answer correctly named both housing_tamsin_court_laundry.txt and housing_old_brewhouse_laundry.txt instead of just one. |
 
 ## Diagnoses
 
