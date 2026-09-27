@@ -153,7 +153,7 @@ The writing-intensive requirement (taking two courses in different departments) 
 
 **Criterion 3 — gate stops out-of-corpus questions** (produced by `run_eval.py::check_out_of_scope` calling `gate.py::check`, cutoff 0.65)
 
-'''
+```
 Out-of-scope questions (the gate should refuse these):
   refused  (best distance 0.825)  What is the capital of Mongolia?
   refused  (best distance 0.934)  How do I change the oil in a diesel engine?
@@ -161,7 +161,7 @@ Out-of-scope questions (the gate should refuse these):
   refused  (best distance 0.844)  What is the recommended dosage of ibuprofen for a headache?
   refused  (best distance 0.896)  How do I write a for loop in Rust?
   -> gate refused 5 of 5
-'''
+```
 
 **Criterion 4 — chunks have the right size** (produced by `chunker.py::split_documents`)
 
