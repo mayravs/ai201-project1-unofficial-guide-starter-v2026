@@ -45,6 +45,14 @@ TOP_K = 5               # how many chunks to pull back per question
 # Most corpora land somewhere between 0.45 and 0.75.
 THRESHOLD = 0.65
 
+# Unit 2's improvement: combine semantic (cosine) search with keyword search
+# (BM25) via reciprocal rank fusion, so exact terms — course codes, dollar
+# amounts, named buildings — that the embedding model blurs together still
+# surface. Only which chunks reach top_k, and in what order, changes; the
+# gate's THRESHOLD is still compared against the plain cosine distance. See
+# store.py::search.
+HYBRID_SEARCH = True
+
 
 # ─── Models ──────────────────────────────────────────────────────────────────
 # Embeddings run on your own machine and cost no API quota.

@@ -210,32 +210,25 @@ Nothing missed. All five criteria passed in all three runs. That said, three of 
 
 **What I changed:**
 
+Added keyword search (BM25) alongside the existing semantic search in `store.py::search`, and combined the two rankings so a chunk can surface either by meaning or by exact word match.
+
 **Why I picked it:**
 
-<!-- Connect it to a specific diagnosis above in one sentence. If you can't,
-     you picked a fix because it sounded impressive. -->
+My diagnosis pointed out that the same five questions never stress-tested retrieval, and a broader set would likely include exact terms — course codes, dollar amounts — that semantic search alone tends to miss.
 
 ### Run Log — After
 
-<!-- Same format, same five criteria, three runs each.
-     `python run_eval.py --label after` -->
-
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
-| 1. Retrieved chunk contains the answer | 4 of 5 |  |  |  |  |
-| 2. Every answer names a source | 5 of 5 |  |  |  |  |
-| 3. Gate stops out-of-corpus questions | 4 of 5 |  |  |  |  |
-| 4. | | | | | |
-| 5. | | | | | |
+| 1. Retrieved chunk contains the answer | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 2. Every answer names a source | 5 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 3. Gate stops out-of-corpus questions | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 4. Chunks have the right size | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 5. Every answer names the correct source | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
 
 **Did it help?**
 
-<!-- Say plainly whether it did, and how you know. If it made things worse,
-     say that — a change that backfired, honestly reported, earns full credit
-     and is more interesting than one that worked. What matters is that you can
-     tell.
-
-     Milestone 4. -->
+Yes: on the laundry question, retrieval used to pull in three unrelated dining chunks alongside the two real laundry sources, but after adding keyword search it retrieves five genuine laundry posts (from five different dorms) and the answer correctly names all of them instead of just two.
 
 ## What's Still Broken
 

@@ -18,6 +18,7 @@ rest of the project if they were wrong:
 """
 
 import os
+import re
 import shutil
 from dataclasses import dataclass
 
@@ -28,6 +29,7 @@ from dataclasses import dataclass
 os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
 
 import chromadb  # noqa: E402
+from rank_bm25 import BM25Okapi  # noqa: E402
 
 import config
 from chunker import Chunk
@@ -134,6 +136,54 @@ def _client():
     )
 
 
+_TOKEN_RE = re.compile(r"[a-z0-9]+")
+
+
+def _tokenize(text: str) -> list[str]:
+    """Lowercase word/number pieces. BM25 wants tokens, not raw text."""
+    return _TOKEN_RE.findall(text.lower())
+
+
+# One BM25 index per collection, built from whatever's in Chroma right now.
+# Keyed by collection name; `build_index` clears the entry it just replaced.
+_bm25_cache: dict[str, BM25Okapi] = {}
+_bm25_ids_cache: dict[str, list[str]] = {}
+
+
+def _bm25_index(collection) -> tuple[BM25Okapi, list[str]]:
+    """BM25 over every chunk in the collection, built once and reused.
+
+    Chroma already holds the chunk text (`collection.get()`), so this needs no
+    storage of its own — just a tokenized copy kept in memory alongside it.
+    """
+    name = collection.name
+    if name not in _bm25_cache:
+        everything = collection.get()
+        ids = everything["ids"]
+        tokenized = [_tokenize(doc) for doc in everything["documents"]]
+        _bm25_cache[name] = BM25Okapi(tokenized)
+        _bm25_ids_cache[name] = ids
+    return _bm25_cache[name], _bm25_ids_cache[name]
+
+
+def _reciprocal_rank_fusion(rankings: list[list[str]], k: int = 60) -> dict[str, float]:
+    """
+    Combine several ranked id lists into one score per id.
+
+    Each ranking contributes 1/(k + rank) to every id it contains — rank 1
+    scores highest, and an id absent from a ranking simply contributes nothing
+    from it. This is Reciprocal Rank Fusion: it only cares about *rank order*
+    within each list, not the raw scores, so a cosine distance and a BM25
+    score — numbers on completely different scales — combine without either
+    one needing to be renormalized to match the other.
+    """
+    scores: dict[str, float] = {}
+    for ranking in rankings:
+        for rank, doc_id in enumerate(ranking, start=1):
+            scores[doc_id] = scores.get(doc_id, 0.0) + 1.0 / (k + rank)
+    return scores
+
+
 def build_index(
     chunks: list[Chunk],
     corpus: str | None = None,
@@ -154,6 +204,10 @@ def build_index(
         client.delete_collection(name)
     except Exception:
         pass
+
+    # Stale otherwise: same name, different chunks underneath it.
+    _bm25_cache.pop(name, None)
+    _bm25_ids_cache.pop(name, None)
 
     collection = client.create_collection(
         name=name,
@@ -185,9 +239,14 @@ def search(
     variant: str = "default",
 ) -> list[Result]:
     """
-    Retrieve the chunks closest in meaning to a question.
+    Retrieve the chunks for a question — semantic search, keyword search, or
+    both, per `config.HYBRID_SEARCH`.
 
-    Returns them nearest-first, each with its distance.
+    Returns them nearest-first. `Result.distance` is always the plain cosine
+    distance from the embedding model, never a fused score — the gate's
+    threshold is calibrated against that number, so hybrid search is only
+    allowed to change *which* chunks reach top_k and in what order, not what
+    "distance" means.
     """
     top_k = top_k or config.TOP_K
     name = config.collection_name(corpus, variant)
@@ -199,15 +258,41 @@ def search(
             f"No index called '{name}'. Run `python app.py index` first."
         ) from exc
 
-    raw = collection.query(
-        query_embeddings=embed([question]),
-        n_results=min(top_k, collection.count()),
-    )
+    count = collection.count()
+
+    if not config.HYBRID_SEARCH:
+        raw = collection.query(query_embeddings=embed([question]), n_results=min(top_k, count))
+        ids = raw["ids"][0]
+        docs = raw["documents"][0]
+        metas = raw["metadatas"][0]
+        distances = raw["distances"][0]
+    else:
+        # Every chunk gets a cosine distance and a BM25 rank, so the two can
+        # be fused; asking for `count` back instead of `top_k` is what makes
+        # a keyword-only match possible even if it wasn't in the semantic
+        # top_k. Corpora this course uses are small (dozens to low hundreds
+        # of chunks), so scoring all of them is cheap.
+        raw = collection.query(query_embeddings=embed([question]), n_results=count)
+        vector_ids = raw["ids"][0]
+        doc_by_id = dict(zip(vector_ids, raw["documents"][0]))
+        meta_by_id = dict(zip(vector_ids, raw["metadatas"][0]))
+        distance_by_id = dict(zip(vector_ids, raw["distances"][0]))
+
+        bm25, bm25_ids = _bm25_index(collection)
+        bm25_scores = bm25.get_scores(_tokenize(question))
+        keyword_ranking = [
+            doc_id for doc_id, _ in
+            sorted(zip(bm25_ids, bm25_scores), key=lambda pair: pair[1], reverse=True)
+        ]
+
+        fused = _reciprocal_rank_fusion([vector_ids, keyword_ranking])
+        ids = sorted(fused, key=lambda doc_id: fused[doc_id], reverse=True)[:top_k]
+        docs = [doc_by_id[doc_id] for doc_id in ids]
+        metas = [meta_by_id[doc_id] for doc_id in ids]
+        distances = [distance_by_id[doc_id] for doc_id in ids]
 
     results: list[Result] = []
-    for text, meta, distance in zip(
-        raw["documents"][0], raw["metadatas"][0], raw["distances"][0]
-    ):
+    for text, meta, distance in zip(docs, metas, distances):
         results.append(
             Result(
                 text=text,
