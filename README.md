@@ -204,23 +204,7 @@ Sources: `housing_tamsin_court_laundry.txt` and `housing_old_brewhouse_laundry.t
 
 ## Diagnoses
 
-<!-- For each miss: which stage caused it, and how. The stage alone isn't
-     enough — you need the mechanism.
-
-     Not a diagnosis: "Question 3 didn't work."
-     A diagnosis:     "Question 3 asks about laundry costs. The answer is in
-                       one sentence that got split across two chunks, so
-                       neither chunk on its own contains it."
-
-     The five stages: loading → chunking → embedding → retrieval → generation.
-
-     Look for a pattern. If three misses all ask about numbers, that's one
-     problem, not three.
-
-     Missed nothing? Say so, then say honestly whether your targets were set
-     low, and which one you'd tighten and to what.
-
-     Milestone 3. -->
+Nothing missed. All five criteria passed in all three runs. That said, three of them (1, 4, and 5) depend on chunking and retrieval, and since I'm asking the same five questions every time, those stages give the same answer every run. There's nothing that could actually make them fail on a second or third try. So getting 5/5 three times over doesn't really prove much beyond what one run already showed. Criteria 2 and 3 are the ones where something could genuinely go wrong each run, and both still passed comfortably. If I were tightening anything, I'd raise criterion 1's target from "4 of 5" to "5 of 5," since there's no good reason to allow for a miss that can't happen. What would actually tell me more is testing on a bigger, more varied set of questions instead of just rerunning the same five.
 
 ## The Improvement
 
